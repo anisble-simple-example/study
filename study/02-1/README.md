@@ -47,7 +47,7 @@
     "state": "file", 
     "uid": 1000
 }
-★ [ copy ] 첫번째 명령어 실행했을 경우와 두번째 실행했을 때 리턴 CHANGED -> SUCCESS 즉 idempontent 멱등법칙이 적용!!!! 
+★ [ copy ] 첫번째 명령어 실행했을 경우와 두번째 실행했을 때 리턴 CHANGED -> SUCCESS 즉 idempotent 멱등법칙이 적용!!!! 
 
 ★ [ command ]  생성 확인 (상태를 보면 항상 CHABGED 즉 not idemptent)
 [ansible@centos100 study02]$ ansible web1 -m command -a 'cat /tmp/text.txt'
@@ -198,8 +198,34 @@ test2
             "net.ifnames": "0",
             "no_timer_check": true,
             "ro": true,
-    
+ 
+★ ansible.cfg는 로컬경로가 우선이고 가장 최상은 환경변수 ANSIBLE_CONFIG
+[ansible@cent100 ~]$ ansible --version
+ansible 2.7.8
+  config file = /etc/ansible/ansible.cfg
+  configured module search path = [u'/home/ansible/.ansible/plugins/modules', u'/usr/share/ansible/plugins/modules']
+  ansible python module location = /usr/lib/python2.7/site-packages/ansible
+  executable location = /bin/ansible
+  python version = 2.7.5 (default, Apr 11 2018, 07:36:10) [GCC 4.8.5 20150623 (Red Hat 4.8.5-28)]
+[ansible@cent100 ~]$ mkdir test1
+[ansible@cent100 ~]$ cd test1
+[ansible@cent100 test1]$ touch ansible.cfg
+[ansible@cent100 test1]$ ansible --version
+ansible 2.7.8
+  config file = /home/ansible/test1/ansible.cfg
+  configured module search path = [u'/home/ansible/.ansible/plugins/modules', u'/usr/share/ansible/plugins/modules']
+  ansible python module location = /usr/lib/python2.7/site-packages/ansible
+  executable location = /bin/ansible
+  python version = 2.7.5 (default, Apr 11 2018, 07:36:10) [GCC 4.8.5 20150623 (Red Hat 4.8.5-28)]
+[ansible@cent100 test1]$ 
+ 
 </pre>
+
+
+
+
+
+
 
 <pre>
 ansible convert 절차를 생각해 볼 필요... 일단 쉘로 간 후 해야겠지?
