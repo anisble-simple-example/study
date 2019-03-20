@@ -1,0 +1,459 @@
+[vagrant@controller playbook]$ cat playbookW1.yml
+---
+- name: setup httpd
+  hosts: web1,web2
+  tasks:
+  - name: WEB INSTALL
+    yum:
+      name: httpd
+  - name: FILE MAKE
+    copy:
+      content: Hello psc first Ansible
+      dest: /var/www/html/test.html
+  - name: WEB RUN
+    service:
+      name: httpd
+      state: started
+  - name: URI CALL
+    uri:
+      url: http://localhost/test.html
+      return_content: yes
+      status_code: 200
+    register: this
+[vagrant@controller playbook]$ ansible-playbook playbookW1.yml  -b
+
+PLAY [setup httpd] *****************************************************************************************************
+
+TASK [Gathering Facts] *************************************************************************************************
+ok: [192.168.56.101]
+ok: [192.168.56.102]
+
+TASK [WEB INSTALL] *****************************************************************************************************
+ok: [192.168.56.102]
+ok: [192.168.56.101]
+
+TASK [FILE MAKE] *******************************************************************************************************
+ok: [192.168.56.101]
+ok: [192.168.56.102]
+
+TASK [WEB RUN] *********************************************************************************************************
+ok: [192.168.56.101]
+ok: [192.168.56.102]
+
+TASK [URI CALL] ********************************************************************************************************
+ok: [192.168.56.101]
+ok: [192.168.56.102]
+
+PLAY RECAP *************************************************************************************************************
+192.168.56.101             : ok=5    changed=0    unreachable=0    failed=0
+192.168.56.102             : ok=5    changed=0    unreachable=0    failed=0
+
+[vagrant@controller playbook]$
+
+
+
+[vagrant@controller playbook]$ cat playbookW1.yml
+---
+- name: setup httpd
+  hosts: web1,web2
+  tasks:
+  - name: WEB INSTALL
+    yum:
+      name: httpd
+  - name: FILE MAKE
+    copy:
+      content: Hello psc first Ansible
+      dest: /var/www/html/test.html
+  - name: WEB RUN
+    service:
+      name: httpd
+      state: started
+  - name: URI CALL
+    uri:
+      url: http://localhost/test.html
+      return_content: yes
+      status_code: 200
+    register: this
+[vagrant@controller playbook]$ ansible-playbook playbookW1.yml  -b
+
+PLAY [setup httpd] *****************************************************************************************************
+
+TASK [Gathering Facts] *************************************************************************************************
+ok: [192.168.56.101]
+ok: [192.168.56.102]
+
+TASK [WEB INSTALL] *****************************************************************************************************
+ok: [192.168.56.102]
+ok: [192.168.56.101]
+
+TASK [FILE MAKE] *******************************************************************************************************
+ok: [192.168.56.101]
+ok: [192.168.56.102]
+
+TASK [WEB RUN] *********************************************************************************************************
+ok: [192.168.56.101]
+ok: [192.168.56.102]
+
+TASK [URI CALL] ********************************************************************************************************
+ok: [192.168.56.101]
+ok: [192.168.56.102]
+
+PLAY RECAP *************************************************************************************************************
+192.168.56.101             : ok=5    changed=0    unreachable=0    failed=0
+192.168.56.102             : ok=5    changed=0    unreachable=0    failed=0
+
+[vagrant@controller playbook]$ vi playbookW1.yml ansible-playbook playbookW1.yml  -b
+[vagrant@controller playbook]$ vi playbookW1.yml
+[vagrant@controller playbook]$ ansible-playbook playbookW1.yml
+
+PLAY [setup httpd] *****************************************************************************************************
+
+TASK [Gathering Facts] *************************************************************************************************
+ok: [192.168.56.101]
+ok: [192.168.56.102]
+
+TASK [WEB INSTALL] *****************************************************************************************************
+ok: [192.168.56.101]
+ok: [192.168.56.102]
+
+TASK [FILE MAKE] *******************************************************************************************************
+fatal: [192.168.56.102]: FAILED! => {"changed": false, "checksum": "b617e9bdba4c7705fb2e4a0da3b798721ec04de7", "msg": "Destination /var/www/html not writable"}
+fatal: [192.168.56.101]: FAILED! => {"changed": false, "checksum": "b617e9bdba4c7705fb2e4a0da3b798721ec04de7", "msg": "Destination /var/www/html not writable"}
+        to retry, use: --limit @/home/vagrant/playbook/playbookW1.retry
+
+PLAY RECAP *************************************************************************************************************
+192.168.56.101             : ok=2    changed=0    unreachable=0    failed=1
+192.168.56.102             : ok=2    changed=0    unreachable=0    failed=1
+
+[vagrant@controller playbook]$ vi playbookW1.yml
+[vagrant@controller playbook]$ clear
+[vagrant@controller playbook]$
+[vagrant@controller playbook]$
+[vagrant@controller playbook]$ cat playbookW1.yml
+---
+- name: setup httpd
+  hosts: web1,web2
+  tasks:
+  - name: WEB INSTALL
+    yum:
+      name: httpd
+  - name: FILE MAKE
+    copy:
+      content: Hello psc first Ansible1
+      dest: /var/www/html/test.html
+  - name: WEB RUN
+    service:
+      name: httpd
+      state: started
+  - name: URI CALL
+    uri:
+      url: http://localhost/test.html
+      return_content: yes
+      status_code: 200
+    register: this
+[vagrant@controller playbook]$ ansible-playbook playbookW1.yml
+
+PLAY [setup httpd] *****************************************************************************************************
+
+TASK [Gathering Facts] *************************************************************************************************
+ok: [192.168.56.101]
+ok: [192.168.56.102]
+
+TASK [WEB INSTALL] *****************************************************************************************************
+ok: [192.168.56.101]
+ok: [192.168.56.102]
+
+TASK [FILE MAKE] *******************************************************************************************************
+fatal: [192.168.56.101]: FAILED! => {"changed": false, "checksum": "b617e9bdba4c7705fb2e4a0da3b798721ec04de7", "msg": "Destination /var/www/html not writable"}
+fatal: [192.168.56.102]: FAILED! => {"changed": false, "checksum": "b617e9bdba4c7705fb2e4a0da3b798721ec04de7", "msg": "Destination /var/www/html not writable"}
+        to retry, use: --limit @/home/vagrant/playbook/playbookW1.retry
+
+PLAY RECAP *************************************************************************************************************
+192.168.56.101             : ok=2    changed=0    unreachable=0    failed=1
+192.168.56.102             : ok=2    changed=0    unreachable=0    failed=1
+
+[vagrant@controller playbook]$ vi playbookW1.yml
+
+[vagrant@controller playbook]$ cat playbookW1.yml
+---
+- name: setup httpd
+  hosts: web1,web2
+  tasks:
+  - name: WEB INSTALL
+    yum:
+      name: httpd
+  - name: FILE MAKE
+    become: yes
+    copy:
+      content: Hello psc first Ansible1
+      dest: /var/www/html/test.html
+  - name: WEB RUN
+    service:
+      name: httpd
+      state: started
+  - name: URI CALL
+    uri:
+      url: http://localhost/test.html
+      return_content: yes
+      status_code: 200
+    register: this
+[vagrant@controller playbook]$ ansible-playbook playbookW1.yml
+
+PLAY [setup httpd] *****************************************************************************************************
+
+TASK [Gathering Facts] *************************************************************************************************
+ok: [192.168.56.101]
+ok: [192.168.56.102]
+
+TASK [WEB INSTALL] *****************************************************************************************************
+ok: [192.168.56.101]
+ok: [192.168.56.102]
+
+TASK [FILE MAKE] *******************************************************************************************************
+changed: [192.168.56.101]
+changed: [192.168.56.102]
+
+TASK [WEB RUN] *********************************************************************************************************
+ok: [192.168.56.101]
+ok: [192.168.56.102]
+
+TASK [URI CALL] ********************************************************************************************************
+ok: [192.168.56.101]
+ok: [192.168.56.102]
+
+PLAY RECAP *************************************************************************************************************
+192.168.56.101             : ok=5    changed=1    unreachable=0    failed=0
+192.168.56.102             : ok=5    changed=1    unreachable=0    failed=0
+
+[vagrant@controller playbook]$
+
+become 옵션 주기~~~ 권한 상승 
+
+
+멱등성이 없음
+[vagrant@controller playbook]$ ansible web1 -m command -a id
+192.168.56.101 | CHANGED | rc=0 >>
+uid=1000(vagrant) gid=1000(vagrant) groups=1000(vagrant) context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023
+
+[vagrant@controller playbook]$ ansible web1 -m shell -a id
+192.168.56.101 | CHANGED | rc=0 >>
+uid=1000(vagrant) gid=1000(vagrant) groups=1000(vagrant) context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023
+
+[vagrant@controller playbook]$ ansible web1 -m raw -a id
+192.168.56.101 | CHANGED | rc=0 >>
+uid=1000(vagrant) gid=1000(vagrant) groups=1000(vagrant) context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023
+Shared connection to 192.168.56.101 closed.
+
+
+[vagrant@controller playbook]$ ansible web1 -m shell -a 'ps -ef|grep httpd'
+192.168.56.101 | CHANGED | rc=0 >>
+root     17943     1  0 06:29 ?        00:00:00 /usr/sbin/httpd -DFOREGROUND
+apache   17944 17943  0 06:29 ?        00:00:00 /usr/sbin/httpd -DFOREGROUND
+apache   17945 17943  0 06:29 ?        00:00:00 /usr/sbin/httpd -DFOREGROUND
+apache   17946 17943  0 06:29 ?        00:00:00 /usr/sbin/httpd -DFOREGROUND
+apache   17947 17943  0 06:29 ?        00:00:00 /usr/sbin/httpd -DFOREGROUND
+apache   17948 17943  0 06:29 ?        00:00:00 /usr/sbin/httpd -DFOREGROUND
+vagrant  22871 22870  0 06:53 pts/1    00:00:00 /bin/sh -c ps -ef|grep httpd
+vagrant  22873 22871  0 06:53 pts/1    00:00:00 grep httpd
+
+[vagrant@controller playbook]$ ansible web1 -m command -a 'ps -ef|grep httpd'
+192.168.56.101 | FAILED | rc=1 >>
+error: unsupported SysV option
+
+Usage:
+ ps [options]
+
+ Try 'ps --help <simple|list|output|threads|misc|all>'
+  or 'ps --help <s|l|o|t|m|a>'
+ for additional help text.
+
+For more details see ps(1).non-zero return code
+
+[vagrant@controller playbook]$ ansible web1 -m raw -a 'ps -ef|grep httpd'
+192.168.56.101 | CHANGED | rc=0 >>
+root     17943     1  0 06:29 ?        00:00:00 /usr/sbin/httpd -DFOREGROUND
+apache   17944 17943  0 06:29 ?        00:00:00 /usr/sbin/httpd -DFOREGROUND
+apache   17945 17943  0 06:29 ?        00:00:00 /usr/sbin/httpd -DFOREGROUND
+apache   17946 17943  0 06:29 ?        00:00:00 /usr/sbin/httpd -DFOREGROUND
+apache   17947 17943  0 06:29 ?        00:00:00 /usr/sbin/httpd -DFOREGROUND
+apache   17948 17943  0 06:29 ?        00:00:00 /usr/sbin/httpd -DFOREGROUND
+vagrant  22944 22820  0 06:53 pts/1    00:00:00 bash -c ps -ef|grep httpd
+vagrant  22958 22944  0 06:53 pts/1    00:00:00 grep httpd
+Shared connection to 192.168.56.101 closed.
+
+
+[vagrant@controller playbook]$
+===============================
+멱등성이 없음
+===============================
+ module        shell   python
+---------------------------------------
+command      X         O
+shell            O         O
+raw             O          X    (순수 ssh를 사용하는 것)
+===============================
+에코로 파일 생성할때  command 는 생성하지 못한다. python 으로만 됨
+네트워크 장비 같은 건  raw 를 사용해서 실행함 
+
+길게 쓰기
+- command: aaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+
+
+
+핸들러는 특정 조건에만 반영 (tasks 와 같은 레벨)
+  aaaaaaaaaaaaaaaaaaa
+
+
+[vagrant@controller playbook]$
+[vagrant@controller playbook]$ clear
+[vagrant@controller playbook]$ cat playbookW1.yml
+- name: setup httpd
+  hosts: web1,web2
+  tasks:
+  - name: WEB INSTALL
+    yum:
+      name: httpd
+  - name: FILE MAKE
+    become: yes
+    copy:
+      content: Hello psc first Ansible1
+      dest: /var/www/html/test.html
+    notify:
+      - "X"
+  - name: WEB RUN
+    service:
+      name: httpd
+      state: started
+  handlers:
+    - name: "X"
+      service:
+        name: httpd
+        state: restarted
+[vagrant@controller playbook]$ ansible-playbook playbookW1.yml -b
+
+PLAY [setup httpd] *****************************************************************************************************
+
+TASK [Gathering Facts] *************************************************************************************************
+ok: [192.168.56.102]
+ok: [192.168.56.101]
+
+TASK [WEB INSTALL] *****************************************************************************************************
+ok: [192.168.56.101]
+ok: [192.168.56.102]
+
+TASK [FILE MAKE] *******************************************************************************************************
+ok: [192.168.56.101]
+ok: [192.168.56.102]
+
+TASK [WEB RUN] *********************************************************************************************************
+ok: [192.168.56.101]
+ok: [192.168.56.102]
+
+PLAY RECAP *************************************************************************************************************
+192.168.56.101             : ok=4    changed=0    unreachable=0    failed=0
+192.168.56.102             : ok=4    changed=0    unreachable=0    failed=0
+
+[vagrant@controller playbook]$ vi playbookW1.yml
+[vagrant@controller playbook]$
+[vagrant@controller playbook]$ ansible-playbook playbookW1.yml -b
+
+PLAY [setup httpd] *****************************************************************************************************
+
+TASK [Gathering Facts] *************************************************************************************************
+ok: [192.168.56.101]
+ok: [192.168.56.102]
+
+TASK [WEB INSTALL] *****************************************************************************************************
+ok: [192.168.56.101]
+ok: [192.168.56.102]
+
+TASK [FILE MAKE] *******************************************************************************************************
+changed: [192.168.56.101]
+changed: [192.168.56.102]
+
+TASK [WEB RUN] *********************************************************************************************************
+ok: [192.168.56.101]
+ok: [192.168.56.102]
+
+RUNNING HANDLER [X] ****************************************************************************************************
+changed: [192.168.56.101]
+changed: [192.168.56.102]
+
+PLAY RECAP *************************************************************************************************************
+192.168.56.101             : ok=5    changed=2    unreachable=0    failed=0
+192.168.56.102             : ok=5    changed=2    unreachable=0    failed=0
+
+[vagrant@controller playbook]$
+
+@@@핸들러 예제!!!!!
+@@@ 리슨어 예제 이해좀 하자~~~ !!!! p.88
+
+인벤토리 기준으로 ansible_become=sudo 
+https://github.com/ansible/ansible-examples
+https://galaxy.ansible.com
+
+https://github.com/openstack/openstack-ansible
+https://github.com/kubespray
+https://github.com/
+
+변수 관련 p.99
+
+[vagrant@controller playbook]$ cat test.yml
+---
+- hosts: web1
+  vars:
+    a: 100
+    b:
+      c: 101
+  tasks:
+    - debug:
+        msg: "{{ a }}{{ b.c }}"
+[vagrant@controller playbook]$ ansible-playbook test.yml
+
+PLAY [web1] ************************************************************************************************************
+
+TASK [Gathering Facts] *************************************************************************************************
+ok: [192.168.56.101]
+
+TASK [debug] ***********************************************************************************************************
+ok: [192.168.56.101] => {
+    "msg": "100101"
+}
+
+PLAY RECAP *************************************************************************************************************
+192.168.56.101             : ok=2    changed=0    unreachable=0    failed=0
+
+[vagrant@controller playbook]$
+
+
+[vagrant@controller playbook]$ cat test.yml
+---
+- hosts: web1
+  vars:
+    a: 100
+    b:
+      c: 101
+  tasks:
+    - debug:
+        msg: "{{ a }}{{ b.c }} {{ ansible_hostname }}"
+[vagrant@controller playbook]$ ansible-playbook test.yml
+
+PLAY [web1] ************************************************************************************************************
+
+TASK [Gathering Facts] *************************************************************************************************
+ok: [192.168.56.101]
+
+TASK [debug] ***********************************************************************************************************
+ok: [192.168.56.101] => {
+    "msg": "100101 host1"
+}
+
+PLAY RECAP *************************************************************************************************************
+192.168.56.101             : ok=2    changed=0    unreachable=0    failed=0
+
+
+@@@@@@@@@@@setup에서  변수 확인를 이용해서 ~ 아이피 가져오기 하는거야~~!!!!! 
+
+(진자 jinja 할꺼얌) 
+
+

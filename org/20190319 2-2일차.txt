@@ -1,0 +1,336 @@
+page.73
+
+uid=1000(vagrant) gid=1000(vagrant) groups=1000(vagrant) context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023
+[vagrant@controller ansible]$ cd ~
+[vagrant@controller ~]$ ls -ltr
+total 4
+-rw-rw-r--. 1 vagrant vagrant 6 Mar 20 00:52 hello.txt
+[vagrant@controller ~]$ pwd
+/home/vagrant
+[vagrant@controller ~]$ touch .ansible.cfg
+[vagrant@controller ~]$ ansible --version
+ansible 2.7.8
+  config file = /home/vagrant/.ansible.cfg
+  configured module search path = [u'/home/vagrant/.ansible/plugins/modules', u'/usr/share/ansible/plugins/modules']
+  ansible python module location = /usr/lib/python2.7/site-packages/ansible
+  executable location = /usr/bin/ansible
+  python version = 2.7.5 (default, Oct 30 2018, 23:45:53) [GCC 4.8.5 20150623 (Red Hat 4.8.5-36)]
+[vagrant@controller ~]$
+
+export ANSIBLE_CONFIG=/tmp/a.cfg
+unset ANSIBLE_CONFIG
+
+https://ko.wikipedia.org/wiki/YAML
+
+yaml, yml
+--- 시작
+... 종료 (다른 데이터와 섞일 경우)
+계층의 들여쓰기 통일 (보통 2칸)
+
+yaml, yml 형식
+
+리스트
+- list1
+- list2
+[list1, list2]
+
+해쉬 ( key는 숫자나 공백을 지원하지 않는다 )
+name: psc
+age: 41
+{name: psc, age: 41}
+
+a: |
+  psc psc psc
+  psc psc psc
+
+스칼라
+name
+
+리스트에 해쉬
+- name: Mary
+  age: 2
+
+리스트의 해쉬
+woman:
+  - girl1
+  - gril2
+
+
+YMAL 은 UTF-8, UTF-16 문자열 탭은 사용 안함 공백이 있어도 상관없음 i am a boy == "i am a boy"  == 'i am a boy'
+https://onlineyamltools.com/
+야뮬 도우미
+sudo yum -y install vim-enhanced
+vi .vimrc
+autocmd FileType yaml setlocal ts=2 sts=2 sw=2 expandtab
+[vagrant@controller playbook]$ ansible web1 -m ping -a 'data=sex'
+192.168.56.101 | SUCCESS => {
+    "changed": false,
+    "ping": "sex"
+}
+[vagrant@controller playbook]$
+
+
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+플레이북은 반드시 리스트로 시작
+tasks는 ansible 서비스 
+필수 지시어 hosts, taskes 이면서 최상의 
+
+playbook에 여러개의 play
+- hosts:
+  tasks:
+
+- hosts:
+  tasks:
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+
+
+
+
+
+[vagrant@controller playbook]$ ansible-playbook playbook0.yml --syntax-check
+
+playbook: playbook0.yml
+[vagrant@controller playbook]$ cat playbook0.yml
+---
+- hosts: web1
+  tasks:
+    - ping:
+        data: abe
+[vagrant@controller playbook]$ ansible-playbook playbook0.yml --syntax-check
+
+playbook: playbook0.yml
+[vagrant@controller playbook]$ ansible-playbook playbook0.yml
+
+PLAY [web1] ************************************************************************************************************
+
+TASK [Gathering Facts] *************************************************************************************************
+ok: [192.168.56.101]
+
+TASK [ping] ************************************************************************************************************
+ok: [192.168.56.101]
+
+PLAY RECAP *************************************************************************************************************
+192.168.56.101             : ok=2    changed=0    unreachable=0    failed=0
+
+
+==> Gathing Facts는 setup 모듈 실행 결과이며 제일 먼저 실행되는 것은 setup 모듈임
+==> 따라서 실행된 모듈은 두 개 ok=2 
+==> changed 변경된 사항
+==> unreachable 도착 실패
+==> failed 변경 실패
+
+
+
+[vagrant@controller playbook]$ cat playbook0.yml
+---
+- hosts: web1
+  tasks:
+    - ping:
+        data: abc1
+    - ping:
+        data: abc2
+    - yum:
+        name: vsftp
+    - ping:
+[vagrant@controller playbook]$ ansible-playbook playbook0.yml
+
+PLAY [web1] ************************************************************************************************************
+
+TASK [Gathering Facts] *************************************************************************************************
+ok: [192.168.56.101]
+
+TASK [ping] ************************************************************************************************************
+ok: [192.168.56.101]
+
+TASK [ping] ************************************************************************************************************
+ok: [192.168.56.101]
+
+TASK [yum] *************************************************************************************************************
+fatal: [192.168.56.101]: FAILED! => {"changed": false, "msg": "No package matching 'vsftp' found available, installed or updated", "rc": 126, "results": ["No package matching 'vsftp' found available, installed or updated"]}
+        to retry, use: --limit @/home/vagrant/playbook/playbook0.retry
+
+PLAY RECAP *************************************************************************************************************
+192.168.56.101             : ok=3    changed=0    unreachable=0    failed=1
+
+[vagrant@controller playbook]$ cat  playbook0.retry
+192.168.56.101
+[vagrant@controller playbook]$
+
+
+
+==>실패 되면 .retry 파일이 생김...  그 파일안에 호스트 정보가 있음 (수정 후 아래와 같이 다시 실행)
+ ansible-playbook playbook0.yml --limit @/home/vagrant/playbook/playbook0.retry
+
+
+
+
+
+[vagrant@controller playbook]$ cat  playbook0.yml
+---
+- hosts: web1
+  tasks:
+    - ping:
+        data: abc1
+    - ping:
+        data: abc2
+    - yum:
+        name: vsftpd
+    - ping:
+[vagrant@controller playbook]$ ansible-playbook playbook0.yml -b
+
+PLAY [web1] ************************************************************************************************************
+
+TASK [Gathering Facts] *************************************************************************************************
+ok: [192.168.56.101]
+
+TASK [ping] ************************************************************************************************************
+ok: [192.168.56.101]
+
+TASK [ping] ************************************************************************************************************
+ok: [192.168.56.101]
+
+TASK [yum] *************************************************************************************************************
+ok: [192.168.56.101]
+
+TASK [ping] ************************************************************************************************************
+ok: [192.168.56.101]
+
+PLAY RECAP *************************************************************************************************************
+192.168.56.101             : ok=5    changed=0    unreachable=0    failed=0
+
+[vagrant@controller playbook]$
+
+[vagrant@controller playbook]$ cat  playbook0.yml
+---
+- hosts: web1, web2
+  tasks:
+    - ping:
+        data: abc1
+    - ping:
+        data: abc2
+    - yum:
+        name: vsftpd
+    - ping:
+[vagrant@controller playbook]$ ansible-playbook playbook0.yml -b
+
+PLAY [web1, web2] ******************************************************************************************************
+
+TASK [Gathering Facts] *************************************************************************************************
+ok: [192.168.56.101]
+ok: [192.168.56.102]
+
+TASK [ping] ************************************************************************************************************
+ok: [192.168.56.102]
+ok: [192.168.56.101]
+
+TASK [ping] ************************************************************************************************************
+ok: [192.168.56.101]
+ok: [192.168.56.102]
+
+TASK [yum] *************************************************************************************************************
+ok: [192.168.56.101]
+changed: [192.168.56.102]
+changed: [192.168.56.102]
+
+TASK [ping] ************************************************************************************************************
+ok: [192.168.56.102]
+ok: [192.168.56.101]
+
+PLAY RECAP *************************************************************************************************************
+192.168.56.101             : ok=5    changed=0    unreachable=0    failed=0
+192.168.56.102             : ok=5    changed=1    unreachable=0    failed=0
+
+[vagrant@controller playbook]$ cat  playbook0.yml
+---
+- hosts: web1, web2
+  tasks:
+    - ping:
+        data: abc1
+    - ping:
+        data: abc2
+    - yum:
+        name: vsftpd
+        state: absent
+    - ping:
+[vagrant@controller playbook]$ ansible-playbook playbook0.yml -b
+
+PLAY [web1, web2] ******************************************************************************************************
+
+TASK [Gathering Facts] *************************************************************************************************
+ok: [192.168.56.101]
+ok: [192.168.56.102]
+
+TASK [ping] ************************************************************************************************************
+ok: [192.168.56.101]
+ok: [192.168.56.102]
+
+TASK [ping] ************************************************************************************************************
+ok: [192.168.56.101]
+ok: [192.168.56.102]
+
+TASK [yum] *************************************************************************************************************
+changed: [192.168.56.101]
+changed: [192.168.56.102]
+
+TASK [ping] ************************************************************************************************************
+ok: [192.168.56.101]
+ok: [192.168.56.102]
+
+PLAY RECAP *************************************************************************************************************
+192.168.56.101             : ok=5    changed=1    unreachable=0    failed=0
+192.168.56.102             : ok=5    changed=1    unreachable=0    failed=0
+
+[vagrant@controller playbook]$
+
+
+둘이 같은 거임....
+==========================
+yum:
+  name: vsftpd
+  state: absent
+==========================
+yum: 'name=vsftpd state=absent'
+
+
+
+[vagrant@controller playbook]$ cat playbook0.yml
+---
+- hosts: web1, web2
+  tasks:
+    -  name: TASK1
+       ping:
+    -  name: TASK2
+       ping:
+    -  name: TASK3
+       ping:
+[vagrant@controller playbook]$ ansible-playbook playbook0.yml
+
+PLAY [web1, web2] ******************************************************************************************************
+
+TASK [Gathering Facts] *************************************************************************************************
+ok: [192.168.56.102]
+ok: [192.168.56.101]
+
+TASK [TASK1] ***********************************************************************************************************
+ok: [192.168.56.101]
+ok: [192.168.56.102]
+
+TASK [TASK2] ***********************************************************************************************************
+ok: [192.168.56.101]
+ok: [192.168.56.102]
+
+TASK [TASK3] ***********************************************************************************************************
+ok: [192.168.56.101]
+ok: [192.168.56.102]
+
+PLAY RECAP *************************************************************************************************************
+192.168.56.101             : ok=4    changed=0    unreachable=0    failed=0
+192.168.56.102             : ok=4    changed=0    unreachable=0    failed=0
+
+[vagrant@controller playbook]$
+
+
+
+
+

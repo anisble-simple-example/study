@@ -1,0 +1,403 @@
+1. ansible 설치 (최신 버젼 EPEL Repo)
+2. SSH 연결
+3. vagrant 동일
+4. passwordless sudo 설정
+5. ssh key 생성
+6. ssh 공개키 등록 
+7. inventory 
+8. 설정
+
+vagrant ssh controller
+vagrant ssh host1
+vagrant ssh host2
+
+
+그룹을 하나씩 만드는 것을 하는 것이 안전 (연산은 참고만 해 쓰지마~)
+: or
+:! not
+:& and
+
+
+-a  모듈에 사용할 아큐먼트
+-f   병령처리
+-m 모듈
+-u  사용자명 (없을 때 현재 사용자명과 동일)
+-b  권한 상승 
+-K  sudo 패스워드
+-k  ssh 패스워드
+
+어떤 모듈을 어떻게 실행할래가 중요함 (ansible)
+모듈이 정의가 안되어 있으면 command 가 실행되는 것을 의미 
+
+
+[vagrant@controller ~]$ ansible-inventory --graph
+@all:
+  |--@controller:
+  |  |--192.168.56.100
+  |--@ungrouped:
+  |--@web-server:
+  |  |--@web1:
+  |  |  |--192.168.56.101
+  |  |--@web2:
+  |  |  |--192.168.56.102
+[vagrant@controller ~]$ ansible all --listi-hosts
+Usage: ansible <host-pattern> [options]
+
+ansible: error: no such option: --listi-hosts
+[vagrant@controller ~]$
+[vagrant@controller ~]$
+[vagrant@controller ~]$
+[vagrant@controller ~]$ ansible all --list-hosts
+  hosts (3):
+    192.168.56.100
+    192.168.56.101
+    192.168.56.102
+[vagrant@controller ~]$ ansible all -a id -b
+192.168.56.100 | CHANGED | rc=0 >>
+uid=0(root) gid=0(root) groups=0(root) context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023
+
+192.168.56.101 | CHANGED | rc=0 >>
+uid=0(root) gid=0(root) groups=0(root) context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023
+
+192.168.56.102 | CHANGED | rc=0 >>
+uid=0(root) gid=0(root) groups=0(root) context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023
+
+[vagrant@controller ~]$ ansible-doc copy
+> COPY    (/usr/lib/python2.7/site-packages/ansible/modules/files/copy.py)
+
+        The `copy' module copies a file from the local or remote machine to a location on the
+        remote machine. Use the [fetch] module to copy files from remote locations to the local
+        box. If you need variable interpolation in copied files, use the [template] module. For
+        Windows targets, use the [win_copy] module instead.
+
+  * note: This module has a corresponding action plugin.
+
+OPTIONS (= is mandatory):
+
+- attributes
+        Attributes the file or directory should have. To get supported flags look at the man
+        page for `chattr' on the target system. This string should contain the attributes in the
+        same order as the one displayed by `lsattr'.
+        `=' operator is assumed as default, otherwise `+' or `-' operators need to be included
+        in the string.
+        (Aliases: attr)[Default: (null)]
+        version_added: 2.3
+
+필수요소!!!
+= dest
+        Remote absolute path where the file should be copied to. If `src' is a directory, this
+        must be a directory too. If `dest' is a nonexistent path and if either `dest' ends with
+        "/" or `src' is a directory, `dest' is created. If `src' and `dest' are files, the
+        parent directory of `dest' isn't created: the task fails if it doesn't already exist.
+
+
+
+
+
+
+
+
+
+
+
+
+[vagrant@controller ~]$ ansible web1 -m copy -a 'src=hello.txt dest=/tmp/hello.txt'
+192.168.56.101 | CHANGED => {
+    "changed": true,
+    "checksum": "f572d396fae9206628714fb2ce00f72e94f2258f",
+    "dest": "/tmp/hello.txt",
+    "gid": 1000,
+    "group": "vagrant",
+    "md5sum": "b1946ac92492d2347c6235b4d2611184",
+    "mode": "0664",
+    "owner": "vagrant",
+    "secontext": "unconfined_u:object_r:user_home_t:s0",
+    "size": 6,
+    "src": "/home/vagrant/.ansible/tmp/ansible-tmp-1553043195.4-122342863489537/source",
+    "state": "file",
+    "uid": 1000
+}
+[vagrant@controller ~]$ ansible web1 -m ping
+192.168.56.101 | SUCCESS => {
+    "changed": false,
+    "ping": "pong"
+}
+[vagrant@controller ~]$ ansible web1 -m command -a 'cat /etc/shadow'
+192.168.56.101 | FAILED | rc=1 >>
+cat: /etc/shadow: Permission deniednon-zero return code
+
+[vagrant@controller ~]$ ansible web1 -m copy -a 'content=hello dest=/tmp/hello1.txt'
+192.168.56.101 | CHANGED => {
+    "changed": true,
+    "checksum": "aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d",
+    "dest": "/tmp/hello1.txt",
+    "gid": 1000,
+    "group": "vagrant",
+    "md5sum": "5d41402abc4b2a76b9719d911017c592",
+    "mode": "0664",
+    "owner": "vagrant",
+    "secontext": "unconfined_u:object_r:user_home_t:s0",
+    "size": 5,
+    "src": "/home/vagrant/.ansible/tmp/ansible-tmp-1553044655.75-177311463166855/source",
+    "state": "file",
+    "uid": 1000
+}
+[vagrant@controller ~]$ ansible web1 -a 'cat /tmp/hello1.txt'
+192.168.56.101 | CHANGED | rc=0 >>
+hello
+
+copy 모듈에서 사용할 것 
+remote_src 리모트에 파일을 복사 소스
+FETCH 리모트에서 역으로 컨트롤러로 복사  #######나중에 찾아보기
+
+[vagrant@controller ~]$
+
+
+커맨드 모듈은 멱등성이 되지 않느다!!!!!!! 체인지 모드라고 생각할 수 밖에 없음
+커맨드 모듈은 멱등성이 되지 않으므로 되도록 사용하지 않는게 좋다!!
+단순 확인 용도로만 사용해라
+
+
+
+
+
+상태값이 중요하다 
+복사할 시 checksum 을 통해 changed  or success 한다.
+- CHANGED: 노랑색
+- SUCCESS: 성공
+- FAILED: 실패
+
+멱등법칙 idempotent  : [ 함수에 함수를 넣으면 결과값은 항상 같다 ]
+- 와스가 올라간 상태에서 다시 올리는 명령어를 하면 안된다...
+모든 모듈이 멱등법칙이 적용 되는 건 아니다!!!! 
+
+[vagrant@controller ~]$ ansible-doc file
+> FILE    (/usr/lib/python2.7/site-packages/ansible/modules/files/file.py)
+
+        Sets attributes of files, symlinks, and directories, or removes
+        files/symlinks/directories. Many other modules support the same options as the `file'
+        module - including [copy], [template], and [assemble]. For Windows targets, use the
+        [win_file] module instead.
+
+OPTIONS (= is mandatory):
+
+- access_time
+        This parameter indicates the time the file's access time should be set to
+        Should be `preserve' when no modification is required, `YYYYMMDDHHMM.SS' when using
+        default time format, or `now'
+        Default is None meaning that `preserve' is the default for
+        `state=[file,directory,link,hard]' and `now' is default for `state=touch'
+        [Default: (null)]
+        version_added: 2.7
+
+- access_time_format
+        When used with `access_time', indicates the time format that must be used.
+        Based on default Python format (see time.strftime doc)
+        [Default: %Y%m%d%H%M.%S]
+        version_added: 2.7
+
+- attributes
+        Attributes the file or directory should have. To get supported flags look at the man
+        page for `chattr' on the target system. This string should contain the attributes in the
+        same order as the one displayed by `lsattr'.
+        `=' operator is assumed as default, otherwise `+' or `-' operators need to be included
+        in the string.
+        (Aliases: attr)[Default: (null)]
+        version_added: 2.3
+
+- follow
+        This flag indicates that filesystem links, if they exist, should be followed.
+        Previous to Ansible 2.5, this was `no' by default.
+        [Default: yes]
+        type: bool
+        version_added: 1.8
+
+- force
+        force the creation of the symlinks in two cases: the source file does not exist (but
+        will appear later); the destination exists and is a file (so, we need to unlink the
+        "path" file and create symlink to the "src" file in place of it).
+        [Default: no]
+        type: bool
+
+- group
+        Name of the group that should own the file/directory, as would be fed to `chown'.
+        [Default: (null)]
+
+- mode
+        Mode the file or directory should be. For those used to `/usr/bin/chmod' remember that
+        modes are actually octal numbers. You must either add a leading zero so that Ansible's
+        YAML parser knows it is an octal number (like `0644' or `01777') or quote it (like
+        `'644'' or `'1777'') so Ansible receives a string and can do its own conversion from
+        string into number.  Giving Ansible a number without following one of these rules will
+        end up with a decimal number which will have unexpected results. As of version 1.8, the
+        mode may be specified as a symbolic mode (for example, `u+rwx' or `u=rw,g=r,o=r').
+        [Default: (null)]
+
+- modification_time
+        This parameter indicates the time the file's modification time should be set to
+        Should be `preserve' when no modification is required, `YYYYMMDDHHMM.SS' when using
+        default time format, or `now'
+        Default is None meaning that `preserve' is the default for
+        `state=[file,directory,link,hard]' and `now' is default for `state=touch'
+        [Default: (null)]
+        version_added: 2.7
+
+- modification_time_format
+        When used with `modification_time', indicates the time format that must be used.
+        Based on default Python format (see time.strftime doc)
+        [Default: %Y%m%d%H%M.%S]
+        version_added: 2.7
+
+- owner
+        Name of the user that should own the file/directory, as would be fed to `chown'.
+        [Default: (null)]
+
+= path
+        Path to the file being managed.
+        (Aliases: dest, name)  
+
+
+[vagrant@controller ~]$ ansible web1 -m file -a 'path=/tmp/hello.txt'
+192.168.56.101 | SUCCESS => {
+    "changed": false,
+    "gid": 1000,
+    "group": "vagrant",
+    "mode": "0664",
+    "owner": "vagrant",
+    "path": "/tmp/hello.txt",
+    "secontext": "unconfined_u:object_r:user_home_t:s0",
+    "size": 6,
+    "state": "file",
+    "uid": 1000
+}
+[vagrant@controller ~]$ ansible web1 -m file -a 'path=/tmp/hello1.txt'
+192.168.56.101 | FAILED! => {
+    "changed": false,
+    "msg": "file (/tmp/hello1.txt) is absent, cannot continue",
+    "path": "/tmp/hello1.txt",
+    "state": "absent"
+}
+
+
+파일 관련 컨트롤 ansible
+[vagrant@controller ~]$ ansible web1 -m file -a 'path=/tmp/hello1.txt state=touch'
+192.168.56.101 | CHANGED => {
+    "changed": true,
+    "dest": "/tmp/hello1.txt",
+    "gid": 1000,
+    "group": "vagrant",
+    "mode": "0664",
+    "owner": "vagrant",
+    "secontext": "unconfined_u:object_r:user_tmp_t:s0",
+    "size": 0,
+    "state": "file",
+    "uid": 1000
+}
+
+[vagrant@controller ~]$ ansible web1 -m file -a 'path=/tmp/hello1.txt state=absent'
+192.168.56.101 | CHANGED => {
+    "changed": true,
+    "path": "/tmp/hello1.txt",
+    "state": "absent"
+}
+
+
+yum 명령어 absent 
+[vagrant@controller ~]$ ansible web1 -m yum -a 'name=openssh'
+192.168.56.101 | SUCCESS => {
+    "ansible_facts": {
+        "pkg_mgr": "yum"
+    },
+    "changed": false,
+    "msg": "",
+    "rc": 0,
+    "results": [
+        "openssh-7.4p1-16.el7.x86_64 providing openssh is already installed"
+    ]
+}
+[vagrant@controller ~]$ ansible web1 -m yum -a 'name=vsftpd'
+192.168.56.101 | FAILED! => {
+    "ansible_facts": {
+        "pkg_mgr": "yum"
+    },
+    "changed": false,
+    "msg": "You need to be root to perform this command.\n",
+    "rc": 1,
+    "results": [
+        "Loaded plugins: fastestmirror\n"
+    ]
+}
+[vagrant@controller ~]$ ansible web1 -m yum -a 'name=vsftpd' -b
+192.168.56.101 | CHANGED => {
+    "ansible_facts": {
+        "pkg_mgr": "yum"
+    },
+    "changed": true,
+    "msg": "warning: /var/cache/yum/x86_64/7/base/packages/vsftpd-3.0.2-25.el7.x86_64.rpm: Header V3 RSA/SHA256 Signature, key ID f4a80eb5: NOKEY\nImporting GPG key 0xF4A80EB5:\n Userid     : \"CentOS-7 Key (CentOS 7 Official Signing Key) <security@centos.org>\"\n Fingerprint: 6341 ab27 53d7 8a78 a7c2 7bb1 24c6 a8a7 f4a8 0eb5\n Package    : centos-release-7-6.1810.2.el7.centos.x86_64 (@anaconda)\n From       : /etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7\n",
+    "rc": 0,
+    "results": [
+        "Loaded plugins: fastestmirror\nDetermining fastest mirrors\n * base: data.aonenetworks.kr\n * extras: centos.cs.nctu.edu.tw\n * updates: centos.cs.nctu.edu.tw\nResolving Dependencies\n--> Running transaction check\n---> Package vsftpd.x86_64 0:3.0.2-25.el7 will be installed\n--> Finished Dependency Resolution\n\nDependencies Resolved\n\n================================================================================\n Package          Arch             Version                 Repository      Size\n================================================================================\nInstalling:\n vsftpd           x86_64           3.0.2-25.el7            base           171 k\n\nTransaction Summary\n================================================================================\nInstall  1 Package\n\nTotal download size: 171 k\nInstalled size: 353 k\nDownloading packages:\nPublic key for vsftpd-3.0.2-25.el7.x86_64.rpm is not installed\nRetrieving key from file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7\nRunning transaction check\nRunning transaction test\nTransaction test succeeded\nRunning transaction\n  Installing : vsftpd-3.0.2-25.el7.x86_64                                   1/1 \n  Verifying  : vsftpd-3.0.2-25.el7.x86_64                                   1/1 \n\nInstalled:\n  vsftpd.x86_64 0:3.0.2-25.el7                                                  \n\nComplete!\n"
+    ]
+}
+[vagrant@controller ~]$ ansible web1 -m yum -a 'name=vsftpd'
+192.168.56.101 | SUCCESS => {
+    "ansible_facts": {
+        "pkg_mgr": "yum"
+    },
+    "changed": false,
+    "msg": "",
+    "rc": 0,
+    "results": [
+        "vsftpd-3.0.2-25.el7.x86_64 providing vsftpd is already installed"
+    ]
+}
+
+yum
+★ 멱등성이 지원함....설치되어 있어야 한다.  
+상태의 기본은 프레젠트!!! 상태 absent 하면 삭제
+
+service 
+멱등성을 재공함 .. 리스타스트는 결국 재시작!!!
+
+
+해당 호스트에 등록 된 setup 을 보고 변수 참고 (팩트 변수 = 사실 변수) 
+[vagrant@controller ~]$ ansible web1 -m setup
+192.168.56.101 | SUCCESS => {
+    "ansible_facts": {
+        "ansible_all_ipv4_addresses": [
+            "10.0.2.15",
+            "192.168.56.101"
+        ],
+        "ansible_all_ipv6_addresses": [
+            "fe80::5054:ff:fe26:1060",
+            "fe80::a00:27ff:feb2:996f"
+        ],
+        "ansible_apparmor": {
+            "status": "disabled"
+        },
+        "ansible_architecture": "x86_64",
+        "ansible_bios_date": "12/01/2006",
+        "ansible_bios_version": "VirtualBox",
+        "ansible_cmdline": {
+            "BOOT_IMAGE": "/boot/vmlinuz-3.10.0-957.5.1.el7.x86_64",
+            "LANG": "en_US.UTF-8",
+            "biosdevname": "0",
+            "console": "ttyS0,115200n8",
+            "crashkernel": "auto",
+            "elevator": "noop",
+            "net.ifnames": "0",
+            "no_timer_check": true,
+            "ro": true,
+
+###########################################################
+ansible로 무조건 짜는게 아니고 
+내가 하는 명령어를 먼저 쉘로 정리하고 ansible로 컴버전
+
+
+
+
+
+
+
+
+ 

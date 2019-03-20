@@ -1,0 +1,499 @@
+https://github.com/c1t1d0s7/cccr
+
+개발부터 운영까지 DevOps
+
+Ansible
+1. ad-hoc    : 커맨드 기반
+2. playbook : 코드 파일 ( yaml )
+
+하드웨어 파티셔닝 가상화 기법으로 시작했지만 Isolation 문제 
+
+provisioning: 최적의 상태를 하기 위한 자원 준비
+
+★Hyper-V 
+각각 APP, OS 가 있음
+provisioning 어려움 (무겁다)
+
+★container > docker 
+어플리케이션과 라이브러리만 가지고 있음, OS 공유
+프로세스 레벨에서 격리 
+provisioning 쉬움 (가볍다)
+주요 기술
+- control-group (하드웨어 제한)
+- namespace (isolation)
+- layerd filesystem
+
+★SDN/NFV
+- SDN: L2, L3 layer (스위치, 라우팅) 네트워크 인프라
+- NFV: L4, L7의 기능 가상화
+
+★VNF
+- 네트워크 소프트웨어를 가상화하면 NFV
+
+★SDS
+- 가상 스토리지 
+ 
+
+소프트웨어 기반으로 모든 걸 처리
+넷플릭스에서는 모든 걸 코드로 ... Infrastructure as Code!
+
+
+=========================================================
+Ansible 과정 실습 환경설정
+1. VirtualBox 다운로드 및 설치
+2. Vagrant 다운로드 및 설치
+3. Vagrant
+vagrant plguin install vagrant-hostmanager
+vagrant box add centos/7
+
+Vagrant 파일
+cd
+mkdir ansible
+Vagrantfile
+파일 받아서 Vagrantfile로 저장
+
+4. Vagrant 사용법
+상태확인  vagrant status
+시작        vagrant up
+일시중지  vagrant suspend
+재개        vagrant resume
+중지        vagrant halt
+삭제        vagrant destroy
+SSH 연결  vagrant ssh host1
+=========================================================
+vagrant ssh controller
+vagrant ssh host1
+vagrant ssh host2
+
+
+실습 시작 
+C:\EDU_20190319\ansible>vagrant ssh controller
+Last login: Tue Mar 19 02:39:53 2019 from 10.0.2.2
+[vagrant@controller ~]$ cat /etc/hosts
+127.0.0.1       controller      controller
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+
+## vagrant-hostmanager-start
+192.168.56.100  controller
+
+192.168.56.101  host11
+
+192.168.56.102  host2
+
+## vagrant-hostmanager-end
+
+[vagrant@controller ~]$ sudo passwd root
+Changing password for user root.
+New password:
+BAD PASSWORD: The password is shorter than 8 characters
+Retype new password:
+passwd: all authentication tokens updated successfully.
+
+
+
+@설치 방법
+sudo yum install epel-release
+sudo yum -y install ansible
+ansible-doc -l |wc -l
+2080
+
+
+@Managed Node에 python 설치 되어야 함
+@Managed Node
+ - sudo 권한을 주세요.
+
+
+@sudo 권한 없이 사용하기!!!
+[vagrant@controller ~]$ sudo cat /etc/sudoers.d/vagrant
+%vagrant ALL=(ALL) NOPASSWD: ALL
+[vagrant@controller ~]$
+
+
+[vagrant@controller ~]$ cat /etc/*-release | uniq
+CentOS Linux release 7.6.1810 (Core)
+NAME="CentOS Linux"
+VERSION="7 (Core)"
+ID="centos"
+ID_LIKE="rhel fedora"
+VERSION_ID="7"
+PRETTY_NAME="CentOS Linux 7 (Core)"
+ANSI_COLOR="0;31"
+CPE_NAME="cpe:/o:centos:centos:7"
+HOME_URL="https://www.centos.org/"
+BUG_REPORT_URL="https://bugs.centos.org/"
+
+CENTOS_MANTISBT_PROJECT="CentOS-7"
+CENTOS_MANTISBT_PROJECT_VERSION="7"
+REDHAT_SUPPORT_PRODUCT="centos"
+REDHAT_SUPPORT_PRODUCT_VERSION="7"
+
+CentOS Linux release 7.6.1810 (Core)
+[vagrant@controller ~]$
+
+사용자 생성
+useradd -m psc -g vagrant
+
+1. ansible 설치
+2. ssh
+3. 같은 계정 
+4. sudo 가능하도록 설정
+5. ssh key 생성
+6. 등록
+7. inventroy
+8. 설정
+
+
+
+
+
+[vagrant@controller ~]$ cat  /etc/ansible/hosts
+[controller]
+192.168.56.100
+
+[host]
+192.168.56.101
+192.168.56.102
+
+[web-server]
+192.168.56.101
+192.168.56.102
+[vagrant@controller ~]$ ansible-inventory --graph
+@all:
+  |--@controller:
+  |  |--192.168.56.100
+  |--@host:
+  |  |--192.168.56.101
+  |  |--192.168.56.102
+  |--@ungrouped:
+  |--@web-server:
+  |  |--192.168.56.101
+  |  |--192.168.56.102
+[vagrant@controller ~]$ ansible-inventory --list
+{
+    "_meta": {
+        "hostvars": {
+            "192.168.56.100": {},
+            "192.168.56.101": {},
+            "192.168.56.102": {}
+        }
+    },
+    "all": {
+        "children": [
+            "controller",
+            "host",
+            "ungrouped",
+            "web-server"
+        ]
+    },
+    "controller": {
+        "hosts": [
+            "192.168.56.100"
+        ]
+    },
+    "host": {
+        "hosts": [
+            "192.168.56.101",
+            "192.168.56.102"
+        ]
+    },
+    "ungrouped": {},
+    "web-server": {
+        "hosts": [
+            "192.168.56.101",
+            "192.168.56.102"
+        ]
+    }
+}
+[vagrant@controller ~]$
+
+
+테스트 컴피그
+============================================================
+[vagrant@controller ~]$ cat  /etc/ansible/hosts
+[controller]
+192.168.56.100
+
+[web1]
+192.168.56.101
+
+[web2]
+192.168.56.102
+
+[web-server:children]
+web1
+web2
+[vagrant@controller ~]$ ansible-inventory --graph
+@all:
+  |--@controller:
+  |  |--192.168.56.100
+  |--@ungrouped:
+  |--@web-server:
+  |  |--@web1:
+  |  |  |--192.168.56.101
+  |  |--@web2:
+  |  |  |--192.168.56.102
+[vagrant@controller ~]$
+[vagrant@controller ~]$ ansible all --list-hosts
+  hosts (3):
+    192.168.56.100
+    192.168.56.101
+    192.168.56.102
+[vagrant@controller ~]$ ansible web-server --list-hosts
+  hosts (2):
+    192.168.56.101
+    192.168.56.102
+[vagrant@controller ~]$ ansible controller  --list-hosts
+  hosts (1):
+    192.168.56.100
+[vagrant@controller ~]$
+[vagrant@controller ~]$ ansible 192.168.56.101 --list-hosts
+  hosts (1):
+    192.168.56.101
+[vagrant@controller ~]$ ansible 192.168.56.109 --list-hosts
+ [WARNING]: Could not match supplied host pattern, ignoring: 192.168.56.109
+
+ [WARNING]: No hosts matched, nothing to do
+
+  hosts (0):
+[vagrant@controller ~]$
+============================================================
+
+ssh 비밀번호 인증 방식
+[vagrant@controller ~]$ ansible web1 -m ping
+The authenticity of host '192.168.56.101 (192.168.56.101)' can't be established.
+ECDSA key fingerprint is SHA256:i71sW4/MCRhEiAVUqnJZMvh0q1//fyPOTi1tuxmK8gc.
+ECDSA key fingerprint is MD5:48:7a:71:ef:e1:d8:da:28:64:c8:7d:91:6c:ff:a5:b2.
+Are you sure you want to continue connecting (yes/no)?
+
+
+
+모듈사용 -m
+ansible web1 -m ping
+
+패스워드 인증 -k
+ansible web1 -m ping -k
+
+평소 사용: ssh vagrant@host1
+
+[vagrant@controller ~]$ ansible web1 -m ping
+The authenticity of host '192.168.56.101 (192.168.56.101)' can't be established.
+ECDSA key fingerprint is SHA256:i71sW4/MCRhEiAVUqnJZMvh0q1//fyPOTi1tuxmK8gc.
+ECDSA key fingerprint is MD5:48:7a:71:ef:e1:d8:da:28:64:c8:7d:91:6c:ff:a5:b2.
+Are you sure you want to continue connecting (yes/no)? yes
+192.168.56.101 | UNREACHABLE! => {
+    "changed": false,
+    "msg": "Failed to connect to the host via ssh: Warning: Permanently added '192.168.56.101' (ECDSA) to the list of known hosts.\r\nPermission denied (publickey,gssapi-keyex,gssapi-with-mic,password,keyboard-interactive).",
+    "unreachable": true
+}
+[vagrant@controller ~]$ ansible web1 -m ping -k
+SSH password:
+192.168.56.101 | SUCCESS => {
+    "changed": false,
+    "ping": "pong"
+}
+[vagrant@controller ~]$
+
+
+========================================
+
+[vagrant@controller ~]$ ssh-keygen
+Generating public/private rsa key pair.
+Enter file in which to save the key (/home/vagrant/.ssh/id_rsa):
+Enter passphrase (empty for no passphrase):
+Enter same passphrase again:
+Your identification has been saved in /home/vagrant/.ssh/id_rsa.
+Your public key has been saved in /home/vagrant/.ssh/id_rsa.pub.
+The key fingerprint is:
+SHA256:bVmtgVh9AuDQwr74/vtlWDgawNQxejvRjtgp2mJ+wsY vagrant@controller
+The key's randomart image is:
++---[RSA 2048]----+
+|     .oo+ooo     |
+|     oo+o= .o..  |
+|     .+.= o oo.  |
+|      .= B + o   |
+|     .o.S B o    |
+|    .o.. = +     |
+|   o+.. . . o    |
+|   oE.o    o     |
+|   ..+..oo.      |
++----[SHA256]-----+
+[vagrant@controller ~]$ ls .ssh/
+authorized_keys  id_rsa  id_rsa.pub  known_hosts
+[vagrant@controller ~]$
+
+
+-rw-------. 1 vagrant vagrant  389 Mar 19 02:29 authorized_keys
+-rw-------. 1 vagrant vagrant 1675 Mar 19 05:54 id_rsa             ==> 개인 키
+-rw-r--r--. 1 vagrant vagrant  400 Mar 19 05:54 id_rsa.pub
+-rw-r--r--. 1 vagrant vagrant  352 Mar 19 05:53 known_hosts
+[vagrant@controller ~]$
+
+
+
+[vagrant@controller ~]$ ssh-copy-id vagrant@192.168.56.100
+/usr/bin/ssh-copy-id: INFO: Source of key(s) to be installed: "/home/vagrant/.ssh/id_rsa.pub"
+/usr/bin/ssh-copy-id: INFO: attempting to log in with the new key(s), to filter out any that are already installed
+/usr/bin/ssh-copy-id: INFO: 1 key(s) remain to be installed -- if you are prompted now it is to install the new keys
+Password:
+Password:
+
+Number of key(s) added: 1
+
+Now try logging into the machine, with:   "ssh 'vagrant@192.168.56.100'"
+and check to make sure that only the key(s) you wanted were added.
+
+[vagrant@controller ~]$ ssh-copy-id vagrant@192.168.56.101
+/usr/bin/ssh-copy-id: INFO: Source of key(s) to be installed: "/home/vagrant/.ssh/id_rsa.pub"
+/usr/bin/ssh-copy-id: INFO: attempting to log in with the new key(s), to filter out any that are already installed
+/usr/bin/ssh-copy-id: INFO: 1 key(s) remain to be installed -- if you are prompted now it is to install the new keys
+Password:
+
+Number of key(s) added: 1
+
+Now try logging into the machine, with:   "ssh 'vagrant@192.168.56.101'"
+and check to make sure that only the key(s) you wanted were added.
+
+[vagrant@controller ~]$ ssh-copy-id vagrant@192.168.56.102
+/usr/bin/ssh-copy-id: INFO: Source of key(s) to be installed: "/home/vagrant/.ssh/id_rsa.pub"
+The authenticity of host '192.168.56.102 (192.168.56.102)' can't be established.
+ECDSA key fingerprint is SHA256:6AqyPSSqI5GD01GJUox5+ZMlNyzDpA7uuZHw+H8h4Hc.
+ECDSA key fingerprint is MD5:45:f6:79:48:4a:53:0a:ea:38:d4:90:67:b5:55:50:25.
+Are you sure you want to continue connecting (yes/no)? yes
+/usr/bin/ssh-copy-id: INFO: attempting to log in with the new key(s), to filter out any that are already installed
+/usr/bin/ssh-copy-id: INFO: 1 key(s) remain to be installed -- if you are prompted now it is to install the new keys
+Password:
+
+Number of key(s) added: 1
+
+Now try logging into the machine, with:   "ssh 'vagrant@192.168.56.102'"
+and check to make sure that only the key(s) you wanted were added.
+
+[vagrant@controller ~]$
+[vagrant@controller ~]$
+[vagrant@controller ~]$
+[vagrant@controller ~]$ ssh-copy-id vagrant@192.168.56.102
+
+
+[vagrant@controller ~]$ ansible all -m command -a 'id'
+192.168.56.101 | CHANGED | rc=0 >>
+uid=1000(vagrant) gid=1000(vagrant) groups=1000(vagrant) context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023
+
+192.168.56.100 | CHANGED | rc=0 >>
+uid=1000(vagrant) gid=1000(vagrant) groups=1000(vagrant) context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023
+
+192.168.56.102 | CHANGED | rc=0 >>
+uid=1000(vagrant) gid=1000(vagrant) groups=1000(vagrant) context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023
+
+[vagrant@controller ~]$ ansible all -m command -a 'hostname'
+192.168.56.102 | CHANGED | rc=0 >>
+host2
+
+192.168.56.100 | CHANGED | rc=0 >>
+controller
+
+192.168.56.101 | CHANGED | rc=0 >>
+host1
+
+[vagrant@controller ~]$
+
+
+retrun 0만 정상 코드
+
+[vagrant@controller ~]$ ansible web1 -m command -a 'cat /etc/shadow'
+192.168.56.101 | FAILED | rc=1 >>
+cat: /etc/shadow: Permission deniednon-zero return code
+
+[vagrant@controller ~]$ ansible web1 -m command -a 'cat /etc/shadow' -b
+192.168.56.101 | CHANGED | rc=0 >>
+root:$1$TvFsdZi3$ThL00kLXc/Cu7DU/p9q1X/:17974:0:99999:7:::
+bin:*:17834:0:99999:7:::
+daemon:*:17834:0:99999:7:::
+adm:*:17834:0:99999:7:::
+lp:*:17834:0:99999:7:::
+sync:*:17834:0:99999:7:::
+shutdown:*:17834:0:99999:7:::
+halt:*:17834:0:99999:7:::
+mail:*:17834:0:99999:7:::
+operator:*:17834:0:99999:7:::
+games:*:17834:0:99999:7:::
+ftp:*:17834:0:99999:7:::
+nobody:*:17834:0:99999:7:::
+systemd-network:!!:17955::::::
+dbus:!!:17955::::::
+polkitd:!!:17955::::::
+rpc:!!:17955:0:99999:7:::
+rpcuser:!!:17955::::::
+nfsnobody:!!:17955::::::
+sshd:!!:17955::::::
+postfix:!!:17955::::::
+chrony:!!:17955::::::
+vagrant:$1$fVNYEMXd$96oOG51lLkWe3XKhM0Hum.::0:99999:7:::
+psc:!!:17974:0:99999:7:::
+
+[vagrant@controller ~]$
+
+
+-b 옵션은 sudo 이다!!!!!!
+
+sudo rm /etc/sudoers.d/vagrant 를 지우고 나면 sudo 안된다!!!!
+
+
+
+    -K, --ask-become-pass
+                        ask for privilege escalation password
+
+-k 소문자: 계정 비밀번호
+-K 대문자: SUDO 패스워드 입력
+
+
+ansible 기본
+ - 반드시 ssh 연결과 sudo password less 를 한다.
+
+https://docs.ansible.com/
+
+[vagrant@controller ~]$ ansible-doc service
+> SERVICE    (/usr/lib/python2.7/site-packages/ansible/modules/system/service.py)
+
+        Controls services on remote hosts. Supported init systems include BSD init, OpenRC, SysV, Solaris SMF, systemd, upstart. For Windows targets,
+        use the [win_service] module instead.
+
+  * note: This module has a corresponding action plugin.
+
+OPTIONS (= is mandatory):
+
+- arguments
+        Additional arguments provided on the command line
+        (Aliases: args)[Default: (null)]
+
+- enabled
+        Whether the service should start on boot. *At least one of state and enabled are required.*
+        [Default: (null)]
+        type: bool
+
+= name
+        Name of the service.
+
+
+====> OPTIONS (= is mandatory ): 필수
+
+
+
+
+
+
+
+
+
+ad-hoc은 하나만 실행 가능 
+환경변수는 ansible_XXXXX 로 시작함
+
+
+
+
+
+
+
+
+베어메탈?
+vagrant

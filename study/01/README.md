@@ -46,12 +46,13 @@ ansible ALL=(ALL) NOPASSWD: ALL
 $ chmod u-w /etc/sudoers
 
 - ansible 계정에서  python 설치 (http://snowdeer.github.io/python/2018/02/20/install-python3-on-centos/)
+$ su - ansible
 $ sudo yum install -y https://centos7.iuscommunity.org/ius-release.rpm
 $ sudo yum install -y python36u python36u-libs python36u-devel python36u-pip
 $ python -V
 
 - SSH 패스워드 인증방식으로 변경
-$ vi /etc/ssh/sshd_config
+$ sudo vi /etc/ssh/sshd_config
 # To disable tunneled clear text passwords, change to no here!
 #PasswordAuthentication yes
 #PermitEmptyPasswords no
@@ -61,7 +62,7 @@ PasswordAuthentication yes
 #ChallengeResponseAuthentication yes
 ChallengeResponseAuthentication yes
 
-$ systemctl restart sshd
+$ sudo systemctl restart sshd
 
 
 A 컨트롤러에 ansible 설치
@@ -71,19 +72,9 @@ $ ansible-doc -l |wc -l
 2080
 
 
-[ansible@cent100 ansible]$ sudo cat hosts
-[controller]
-192.168.100.100
-
-[host]
-192.168.100.101
-192.168.100.102
-
-[web-server]
-192.168.100.101
-192.168.100.102
-
-[ansible@cent100 ansible]$ sudo cat hosts
+[ansible@centos100 ansible]$ pwd
+/etc/ansible
+[ansible@centos100 ansible]$ sudo cat hosts
 [controller]
 192.168.100.100
 
@@ -92,21 +83,17 @@ $ ansible-doc -l |wc -l
 
 [web2]
 192.168.100.102
-
-[web-server:children]
-web1
-web2
-[ansible@cent100 ansible]$ ansible-inventory --graph
+[ansible@centos100 ansible]$ ansible-inventory --graph
 @all:
   |--@controller:
   |  |--192.168.100.100
   |--@ungrouped:
-  |--@web-server:
-  |  |--@web1:
-  |  |  |--192.168.100.101
-  |  |--@web2:
-  |  |  |--192.168.100.102
-[ansible@cent100 ansible]$ 
+  |--@web1:
+  |  |--192.168.100.101
+  |--@web2:
+  |  |--192.168.100.102
+[ansible@centos100 ansible]$ 
+
 
 [ansible@cent100 ansible]$ ansible web1 -m ping
 The authenticity of host '192.168.100.101 (192.168.100.101)' can't be established.
@@ -126,8 +113,18 @@ SSH password:
     "unreachable": true
 }
 
+-m 모듈
 -k 소문자: 계정 비밀번호
 -K 대문자: SUDO 패스워드 입력
+
+[ansible@centos100 ansible]$ sudo passwd ansible
+ansible 사용자의 비밀 번호 변경 중
+새  암호:
+잘못된 암호: 암호는 8 개의 문자 보다 짧습니다
+새  암호 재입력:
+passwd: 모든 인증 토큰이 성공적으로 업데이트
+
+
 
 [ansible@cent100 ansible]$ 
 [ansible@cent100 ansible]$ ssh-keygen
