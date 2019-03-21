@@ -1,0 +1,243 @@
+[vagrant@controller playbook]$ cat test.yml
+---
+- hosts: web1
+  vars:
+    a: 100
+    b:
+      c: 101
+  tasks:
+    - debug:
+        msg: "{{ a }}{{ b.c }}"
+[vagrant@controller playbook]$ ansible-playbook test.yml -e 'a=1818'
+
+PLAY [web1] ************************************************************************************************************
+
+TASK [Gathering Facts] *************************************************************************************************
+ok: [192.168.56.101]
+
+TASK [debug] ***********************************************************************************************************
+ok: [192.168.56.101] => {
+    "msg": "1818101"
+}
+
+PLAY RECAP *************************************************************************************************************
+192.168.56.101             : ok=2    changed=0    unreachable=0    failed=0
+
+
+
+변수의 우선수위 실습
+[vagrant@controller day3]$ cat test1.yml
+---
+- hosts: web1
+  vars_files:
+    - vfile.yml
+  tasks:
+    - debug:
+        msg: "{{ a }}"
+[vagrant@controller day3]$
+[vagrant@controller day3]$ cat group_vars/web1
+a: 99
+[vagrant@controller day3]$ cat vfile.yml
+a: 222
+[vagrant@controller day3]$ ansible-playbook test1.yml
+
+PLAY [web1] ************************************************************************************************************
+
+TASK [Gathering Facts] *************************************************************************************************
+ok: [192.168.56.101]
+
+TASK [debug] ***********************************************************************************************************
+ok: [192.168.56.101] => {
+    "msg": 222
+}
+
+PLAY RECAP *************************************************************************************************************
+192.168.56.101             : ok=2    changed=0    unreachable=0    failed=0
+
+
+
+변수 우선 순위
+include_vars              변수를 외부에서 참조
+var_files                   플레이북 안에서 정의해서 사용
+playbook group_vars  폴더로 파일
+inventory group_vars  폴더의 파일
+
+
+그룹용  group_vars, host_vars
+대규모  include, inclued_vars
+
+
+플레이북을 쪼갬
+include                    모듈 task를 외부에서 참조
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+계층적 플레이북 만들기 
+main.yum
+---
+- hosts: web1
+  tasks:
+    - include: sub1.yum
+    - include_vars: vars.yum
+    - include: sub2.yum
+
+sub1.yum
+---
+- ping:
+- ping:
+    data: test
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+
+tasks:
+  - include: wordpress.yml wp_user=abc1
+  - include: wordpress.yml wp_user=abc2
+  - include: wordpress.yml wp_user=abc3
+
+아이디어 
+pkg.yml  변수로 받아서 yum 설치 하는거 만들기
+service.yml 변수로 받아서 서비스 설치하는거 만들기  
+
+cat test2.yml
+- hosts: web1
+  tasks:
+    - include: pkg.yml pkg_name=httpd
+    - inclued: pkg.yml pkg_name=php
+
+cat pkg.yml
+- yum:
+    name: "{{ pkg_name }}"
+
+============================================
+템플릿 부분 jinja 엔진 기반임 
+
+[vagrant@controller temp]$ cat test1.yml
+- hosts: web1
+  vars:
+    message: hello world
+  tasks:
+    - template:
+        src: source.txt
+        dest: /tmp/source.txt
+
+[vagrant@controller temp]$ cat source.txt
+{{ message }}
+[vagrant@controller temp]$ ansible-playbook test1.yml
+
+PLAY [web1] ************************************************************************************************************
+
+TASK [Gathering Facts] *************************************************************************************************
+ok: [192.168.56.101]
+
+TASK [template] ********************************************************************************************************
+changed: [192.168.56.101]
+
+PLAY RECAP *************************************************************************************************************
+192.168.56.101             : ok=2    changed=1    unreachable=0    failed=0
+[vagrant@controller temp]$ ansible web1 -m command -a 'cat /tmp/source.txt'
+192.168.56.101 | CHANGED | rc=0 >>
+hello world
+
+=> 필터 기능 사용
+1. 데이터 서식 지정
+2. 필수 변수 강제회 mandatory
+3. 기본 값 변수 
+4. ip 주소 필터 (아이피 형식 체크)
+5. 주석 필터 
+ - 템플릿 파일은 확장자 .j2
+
+p.107
+  ansible.cfg 변경 중요!!!
+  ansible_managed를 변경해서 주석을 변경 {{ ansible_managed | comment }} 
+  변수마다 할수 있지만 보통 헤더에 넣음... 그래서 어떻게 관리되고 있다고 표현....
+
+
+변수, include, template
+
+
+Web deploy  (템플릿, 핸들러, 인클루드 사용)
+1. 패키지
+2. 설정파일 복사 /etc/httpd/conf/httpd.conf
+3. 컨텐츠 복사
+4. 서비스 기동
+5. 핸들러 설정 파일이 변경 되었을 때!!! 서비스 재시작
+
+
+github에서 raw 형태로 받아옴!!!! (좋네)
+https://raw.githubusercontent.com/c1t1d0s7/cccr/master/j2-template/httpd.conf.j2
+curl -o webTemp.js https://raw.githubusercontent.com/c1t1d0s7/cccr/master/j2-template/httpd.conf.j2
+
+
+ansible_managed = Ansible managed: {file} modified on %Y-%m-%d %H:%M:%S by {uid} on {host}
+
+04 template 보내주세요.
+cccr-master.zip -> sample1 에서 구조화 된 것을 확인 
+
+=============================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

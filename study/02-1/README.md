@@ -218,18 +218,11 @@ ansible 2.7.8
   executable location = /bin/ansible
   python version = 2.7.5 (default, Apr 11 2018, 07:36:10) [GCC 4.8.5 20150623 (Red Hat 4.8.5-28)]
 [ansible@cent100 test1]$ 
- 
 </pre>
-
-
-
-
-
 
 
 <pre>
 ansible convert 절차를 생각해 볼 필요... 일단 쉘로 간 후 해야겠지?
-
 -b --become          권한 상승
 -a --args            모듈 아규먼트
 -k --ask-pass        ssh 패스워드

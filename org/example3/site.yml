@@ -1,0 +1,10 @@
+---
+- hosts: web-server
+  become: true
+  roles:
+    - webdeploy
+
+- hosts: controller
+  become: true
+  roles:
+    - loadbalancer

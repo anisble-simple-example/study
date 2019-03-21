@@ -58,18 +58,22 @@ PLAY RECAP *********************************************************************
 
 
 ★ [ 독립적 공간 ] 사용법
-[ansible@cent100 test2]$ ansible all --list-hosts
-  hosts (1):
-    192.168.100.100
-[ansible@cent100 test2]$ cat ansible.cfg 
+$ cat ansible.cfg 
 [defaults]
 inventory=inventory
-[ansible@cent100 test2]$ cat inventory 
+
+$ cat inventory 
 [psc1]
 192.168.100.100
-[ansible@cent100 test2]$ ansible all --list-hosts
+
+$ ansible all --list-hosts
   hosts (1):
     192.168.100.100
-[ansible@cent100 test2]$ 
 
+$ ansible-inventory --graph
+@all:
+  |--@psc1:
+  |  |--192.168.100.101
+  |--@ungrouped:
+[ansible@cent100 03-1]$ 
 </pre>

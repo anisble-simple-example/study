@@ -1,0 +1,8 @@
+- name: Installing Web Package
+  include: install.yml
+- name: Copying Configuration File
+  include: template.yml
+- name: Copying Web Contents
+  include: content.yml
+- name: Start Web Service
+  include: service.yml mode=started

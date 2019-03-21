@@ -1,0 +1,186 @@
+[vagrant@controller ~]$ cat debug.yml
+- hosts: web1
+  vars:
+    message: hello
+  tasks:
+    - debug:
+        msg: "{{ message }}"
+    - debug:
+        var: message
+[vagrant@controller ~]$ ansible-playbook debug.yml
+
+PLAY [web1] ************************************************************************************************************
+
+TASK [Gathering Facts] *************************************************************************************************
+ok: [192.168.56.101]
+
+TASK [debug] ***********************************************************************************************************
+ok: [192.168.56.101] => {
+    "msg": "hello"
+}
+
+TASK [debug] ***********************************************************************************************************
+ok: [192.168.56.101] => {
+    "message": "hello"
+}
+
+PLAY RECAP *************************************************************************************************************
+192.168.56.101             : ok=3    changed=0    unreachable=0    failed=0
+
+[vagrant@controller ~]$
+
+
+page. 118
+block 지정하여 task 를 블록화  (tasks 보다 상위)
+
+page. 119
+- block:
+  rescue: 블럭문에 묶여진거 중에 하나라도 실패하면 이게 작동 (성공시 작동 안함) - 디버깅 목정126
+  always: 항상 작동
+
+-block:
+ rescue:
+ 
+
+
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@2
+role 
+page. 120 
+
+
+pre_tasks
+tasks
+post_tasks
+
+메타를 통한 의존성 등록 트리거 구성 가능
+
+
+==================================ROLE 구조 만들기 
+[vagrant@controller ~]$ mkdir roles
+[vagrant@controller ~]$ cd roles/
+[vagrant@controller roles]$ ansible-galaxy init webdeploy
+- webdeploy was created successfully
+[vagrant@controller roles]$ tree
+
+
+9 directories, 8 files
+[vagrant@controller roles]$
+
+==================================ROLE 구조 만들기  
+sample1 참고 - 템플릿 기반
+sample2 참고 - 롤 기반
+===============================
+
+===============================아주아주 중요함
+page. 125 - 비동기화  
+  async: 45  (45초까지 기다림)
+  poll:  5 ( 5초마다 체크)
+  poll:  0 ( 체크하지 않음... 걍 다음작업으로 넘어감 )
+
+page. 126 - 다시 동기화
+  백그라운드 실행 jid가 자동으로 생김
+  util: job_result.finished
+  retries: 30
+
+
+체크모드: 시뮬레이션 드라이 런  --check
+핸들러 강제 실행 옵션 확인,,,,,~~~
+
+
+=======================
+yum haproy ~!!! 설치
+cat haproxy.cfg
+frontend main ~ 80으로 변경
+
+backend app
+systemd status haproxy
+
+page. 132
+실패한 작업부터 다시 시작할때 --start-at-task
+--limit web1  호스트 지정
+
+step: 대화형 
+
+=====================================
+
+sample1 참고 - 템플릿 기반
+sample2 참고 - 롤 기반
+sample3 참고 - 롤 두개 기반
+
+샘플3에 cat site.xml 추가 사항
+task: 
+  - name: check Access
+    uri:
+     url: "http:192.168.56.100:{{ lb.svc.port }}"
+ 
+url -> uri 맨 보고 기본 리턴 값 200 보는 거 확인하기 ....
+======================================
+
+
+로드밸랜서 끊기 작업 Rolling update ~~~ 
+
+ansible.cfg
+[defaults]
+inventory=inventory
+
+inventory
+127.0.0.1 ansible_connection=local
+127.0.0.2 ansible_connection=local
+
+=> ansible-inventory --graph
+
+
+fork 옵션은 동시에 실행시킬수 있는 호스트 갯수 
+time ansible test -a 'sleep 3' -f 1    ==> 느림 
+time ansible test -a 'sleep 3' -f 6    ==> 빠름 
+
+기본 fork 값은 5임 .. grep fork /etc/ansible/ansible.cfg
+
+  tasks:                                       
+  serial: 2 옵션은 호스트 별로 실행....  ( ansible.cfg에서 설정 불가하고 playbook 에서만 활용 )
+
+
+
+
+===> delegate_to: controller 작업 위임
+
+- hosts: web1
+  tasks: 
+    - command: hostname
+      register: result
+    - debug:
+        var: result.stdout
+    - command: hostname
+      delegate_to: controller
+      register: result
+  
+    - debug:
+        var: result.stdout    
+
+인벤토리에 호스트가 반드시 있어야 함....( controller)
+사용법 박세다
+ansible - module - haproxy
+- haproxy: disabled
+
+
+소켓 cfg에서 확인하고 위임하면서 내리고 올리고 할수 있음
+ansible controoller  -m haproxy -a "status=disabled backup=app host=web1 socket=/var/lib/haproxy/status" -b
+
+
+암호화 page..133
+ansible-vault [ create....] 
+암호화 된 yml 실행하기 
+암호화 파일 패스로 실행하기 ...
+
+구조화 된 암호화 패스는 동일해야 함 ..
+암호화 page.137
+멀티 패스워드 
+
+
+ 
+
+
+
+
+

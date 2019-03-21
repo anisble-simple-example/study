@@ -1,4 +1,4 @@
-anisble is Configuration Management
+Ansible is Configuration Management
 <pre>
 0. 리눅스 centos ip 설정
 
