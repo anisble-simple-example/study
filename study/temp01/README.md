@@ -1,4 +1,6 @@
 <pre>
+★ [ playbook ] template
+
 [ansible@cent100 temp01]$ ansible-galaxy init webdeploy
 - webdeploy was created successfully
 [ansible@cent100 temp01]$ tree webdeploy/

@@ -1,0 +1,42 @@
+---
+- name: Web Deployment
+  become: true
+  hosts: web1
+  vars:
+    web:
+      svc:
+        pkg: httpd #Web Package
+        name: httpd #Systemd Service Name
+        port: 80 #Web Service Port
+      admin:
+        email: admin@example.com
+      file:
+        config:
+          src: httpd.conf.j2
+          dst: /etc/httpd/conf/httpd.conf
+        content:
+          src: index.html
+          dst: /var/www/html/index.html
+  tasks:
+    - yum:
+        name: httpd
+    - template:
+        src: "{{ web.file.config.src }}"
+        dest: "{{ web.file.config.dst }}"
+      notify:
+        - "Restart Web Service"
+    - copy:
+        src: "{{ web.file.content.src }}"
+        dest: "{{ web.file.content.dst }}"
+    - service:
+        name: firewalld
+        state: stopped
+        enabled: false
+    - service:
+        name: "{{ web.svc.name }}"
+        state: started
+  handlers:
+    - name: Restart Web Service
+      service:
+        name: "{{ web.svc.name }}"
+        state: restarted
