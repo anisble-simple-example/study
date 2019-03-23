@@ -3,6 +3,8 @@
   become: true
   hosts: web1
   tasks:
+    - name: Stop filrewall Service
+      include: firewall.yml mode=stopped
     - name: Including variables
       include_vars: var/vars.yml
     - name: Installing Web Package
@@ -13,8 +15,6 @@
       include: content.yml
     - name: Start Web Service
       include: service.yml mode=started
-    - name: Stop filrewall Service
-      include: firewall.yml mode=stopped
   handlers:
     - name: Restart Web Service
       include: service.yml mode=restarted

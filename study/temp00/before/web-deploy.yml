@@ -18,6 +18,10 @@
           src: index.html
           dst: /var/www/html/index.html
   tasks:
+    - service:
+        name: firewalld
+        state: stopped
+        enabled: false
     - yum:
         name: httpd
     - template:
@@ -28,10 +32,6 @@
     - copy:
         src: "{{ web.file.content.src }}"
         dest: "{{ web.file.content.dst }}"
-    - service:
-        name: firewalld
-        state: stopped
-        enabled: false
     - service:
         name: "{{ web.svc.name }}"
         state: started
