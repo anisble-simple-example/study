@@ -1,0 +1,4 @@
+- service:
+      name: firewalld
+      state: "{{ mode }}"
+      enabled: false
