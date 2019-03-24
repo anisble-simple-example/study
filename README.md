@@ -51,6 +51,17 @@ WEB 서버 설치 및 소스 배포
     git pull origin master
     cd ./study/temp04
     ansible-playbook site.yml
+    
+    cd ~
+    rm -rf tests
+    git init tests
+    cd tests
+    git config core.sparseCheckout true
+    git remote add -f origin https://github.com/anisble-simple-example/study.git
+    echo "study/tests" >> .git/info/sparse-checkout
+    git pull origin master
+    cd ./study/tests
+    ansible-playbook test01.yml        
 </pre>
 
 

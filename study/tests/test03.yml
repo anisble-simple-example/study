@@ -3,12 +3,14 @@
   tasks:
     - name: name step1
       command: sleep 10
-      async: 5
+      async: 10
       poll: 0
+      register: step1
     - name: name step2
       debug:
         msg: step2
     - name: name step3
+      async_status: jid={{ step1.ansible_job_id }}
       debug:
         msg: step3
 
