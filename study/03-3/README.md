@@ -17,4 +17,7 @@
 
     다시 동기화 - async_status, util, retries
     ansible-playbook test03.yml     
+    
+    병렬 실행 - serial
+    ansible-playbook test04.yml   
 <pre>    
