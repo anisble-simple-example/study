@@ -1,0 +1,3 @@
+- copy:
+    src: "{{ web.file.content.src }}"
+    dest: "{{ web.file.content.dst }}"
