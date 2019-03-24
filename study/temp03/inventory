@@ -9,5 +9,5 @@
 
 [web-server:children]
 web1
-wew2
+web2
 
