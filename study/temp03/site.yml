@@ -1,5 +1,5 @@
 ---
-- hosts: web1, web2
+- hosts: web-server
   become: true
   roles:
     - webdeploy
