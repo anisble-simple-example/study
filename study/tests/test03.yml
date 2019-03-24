@@ -8,10 +8,14 @@
       register: step1
     - name: name step2
       debug:
-        msg: step2
-    - name: name step3
+        msg: msg step2
+    - name: sync
       async_status: jid={{ step1.ansible_job_id }}
+      register: job_result
+      until: job_result.finished
+      retries: 100
+    - name: step3
       debug:
-        msg: step3
+        msg: msg step3
 
 
