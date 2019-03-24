@@ -1,5 +1,3 @@
-- name: Stop filrewall Service
-  include: firewall.yml mode=stopped
 - name: Installing Web Package
   include: install.yml
 - name: Copying Configuration File
@@ -8,5 +6,3 @@
   include: content.yml
 - name: Start Web Service
   include: service.yml mode=started
-- name: Test Uri Service
-  include: uri.yml

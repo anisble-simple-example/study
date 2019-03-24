@@ -1,0 +1,4 @@
+- service:
+    name: "{{ web.svc.name }}"
+    enabled: yes
+    state: "{{ mode }}"

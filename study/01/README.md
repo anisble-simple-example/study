@@ -126,6 +126,13 @@ ansible 사용자의 비밀 번호 변경 중
 passwd: 모든 인증 토큰이 성공적으로 업데이트
 
 
+SSH 관련 설정 꼬였을 경우 (재설치 하십시요.. 함부로 .ssh 지우는거 절대 아님!!)
+$ rpm -qf /etc/ssh/sshd_config   # to find out what package owns the file
+openssh-server
+$ mv /etc/ssh/sshd_config{,.old} # backup the modified version
+$ yum reinstall openssh-server   # will create the file with default configuration
+
+
 
 [ansible@cent100 ansible]$ 
 [ansible@cent100 ansible]$ ssh-keygen

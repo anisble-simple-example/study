@@ -2,7 +2,7 @@ web:
   svc:
     pkg: httpd #Web Package
     name: httpd #Systemd Service Name
-    port: 8080 #Web Service Port
+    port: 80 #Web Service Port
   admin:
     email: admin@example.com
   file:
@@ -10,6 +10,6 @@ web:
       src: httpd.conf.j2
       dst: /etc/httpd/conf/httpd.conf
     content: 
-      src: index.html
+      src: index.html.j2
       dst: /var/www/html/index.html
 

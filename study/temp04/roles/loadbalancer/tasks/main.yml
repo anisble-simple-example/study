@@ -1,0 +1,16 @@
+---
+# tasks file for loadbalancer
+- name: Installing LB Package
+  yum:
+    name: haproxy
+- name: Copying Configuration File
+  template:
+    src: haproxy.cfg.j2
+    dest: /etc/haproxy/haproxy.cfg
+  notify:
+    - "Restart LB Service"
+- name: Start LB Service
+  service:
+    name: haproxy
+    enabled: yes
+    state: started
