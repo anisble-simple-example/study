@@ -1,0 +1,10 @@
+---
+- hosts: web1
+  tasks:
+    - name: step1
+      command: sleep 10
+    - name: step2
+      debug:
+        msg: step2
+
+
